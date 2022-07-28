@@ -1,0 +1,134 @@
+﻿@page "/"
+@page "/contact"
+@page "/Entry"
+@using ContactPage.Data
+@inject ContactDB contactDB
+
+<style>
+    .add-contact
+    {
+        width:120px;
+    }
+</style>
+
+
+<h3 class="contact_title">Contact</h3>
+
+<EditForm Model="newEntry" OnValidSubmit="CreateEntry">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+    <div class="row">
+        <div class="col">
+            <label class="contact-label">Last Name</label>
+            <input placeholder="Smith" class="form-control" @bind-value="newEntry.LastName" />
+        </div>
+        <div class="col">
+            <label class="contact-label">First Name</label>
+            <input placeholder="John" class="form-control" @bind-value="newEntry.FirstName" />
+        </div>
+                <div class="col">
+            <label class="contact-label">Birth Date</label>
+            <input placeholder="1/11/1990" class="form-control" @bind-value="newEntry.BirthDate" />
+        </div>
+        <div class="col">
+            <label class="contact-label">Phone No</label>
+            <input type="tel" placeholder="888-888-888" class="form-control" @bind-value="newEntry.PhoneNumber" />
+        </div>
+
+    </div>
+    <div class="col">
+        <button class="btn-add" type="submit">Add Contact</button>
+        <button class="btn-success" type="button" @onclick="@EditEntry">Save Contact</button>
+    </div>
+</EditForm>
+<hr />
+
+<table class="table">
+    <thead class="table-dark">
+        <tr>
+            <th>
+                Last Name
+            </th>
+            <th>
+                First Name
+            </th>
+            <th>
+                BirthDate
+            </th>
+            <th>
+                Phone No
+            </th>
+            <th>
+                Action
+            </th>
+        </tr>
+    </thead>
+
+    
+    <tbody>
+        @foreach (Entry entry in allEntries)
+        {
+            <tr>
+                <td>
+                    @entry.LastName
+                </td>
+                <td>
+                    @entry.FirstName
+                </td>
+                <td>
+                    @entry.BirthDate
+                </td>
+                <td>
+                    @entry.PhoneNumber
+                </td>
+                <td>
+                    <a class="nav-link" href="">
+                        <span class="oi oi-pencil" @onclick="()=>BeforeEdit(entry)" style="background-color:lawngreen;border-radius:5px; text-align:center; padding:10px;" aria-hidden="true">Edit</span>
+                    </a>
+                    <a class="nav-link" href="">
+                        <span class="oi oi-trash" @onclick="()=>DeleteEntry(entry)" style="background-color:red;border-radius:5px; padding:10px; text-align:center;" aria-hidden="true">Delete</span>
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+
+</table>
+
+@code {
+    List<Entry> allEntries = new List<Entry>();
+    Entry newEntry = new Entry();
+
+    protected override async Task OnInitializedAsync()
+    {
+        allEntries = await contactDB.GetAllEntries();
+
+    }
+    protected async Task CreateEntry()
+    {
+        await contactDB.AddEntry(newEntry);
+        allEntries = await contactDB.GetAllEntries();
+        newEntry = new Entry();
+    }
+
+    protected async Task DeleteEntry(Entry entry)
+    {
+        await contactDB.DeleteEntry(entry);
+        allEntries = await contactDB.GetAllEntries();
+    }
+
+    protected async Task EditEntry()
+    {
+        await contactDB.EditEntry(newEntry);
+        newEntry = new Entry();
+    }
+
+    private async Task BeforeEdit(Entry entry)
+    {
+        newEntry.BirthDate = entry.BirthDate;
+        newEntry.FirstName = entry.FirstName;
+        newEntry.LastName = entry.LastName;
+        newEntry.PhoneNumber = entry.PhoneNumber;
+        newEntry.Id = entry.Id;
+    }
+}
